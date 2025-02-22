@@ -1,7 +1,8 @@
-Evm Ripper - Ethereum Transaction Tracer
+##Evm Ripper - Ethereum Transaction Tracer
+
 Evm Ripper is a Next.js application that traces Ethereum transactions for a given address using the Etherscan API and visualizes them as an interactive force-directed graph. The graph displays nodes (Ethereum addresses) and edges (transactions), with each edge showing the transaction time and ETH value.
 
-Features
+##Features
 
 Ethereum Transaction Tracing:
 Fetch transactions for a specified Ethereum address using the Etherscan API.
@@ -16,44 +17,9 @@ Each edge displays the transaction's time and ETH value.
 CSV Export:
 Easily export the transaction data as a CSV file for further analysis.
 
-Prerequisites
-Node.js (v12 or later)
-npm or yarn
-Installation
-Clone the repository:
 
-bash
-Copy
-Edit
-git clone https://github.com/yourusername/evm-ripper.git
-cd evm-ripper
-Install dependencies:
+##How to Use
 
-bash
-Copy
-Edit
-npm install
-# or
-yarn install
-Configuration
-Create a .env.local file in the root directory and add your Etherscan API key:
-
-env
-Copy
-Edit
-NEXT_PUBLIC_ETHERSCAN_API_KEY=your_etherscan_api_key_here
-Running the App
-Start the development server:
-
-bash
-Copy
-Edit
-npm run dev
-# or
-yarn dev
-Open your browser and navigate to http://localhost:3000 to see the application in action.
-
-How to Use
 Enter an Ethereum Address:
 Type an Ethereum address (starting with 0x) in the provided input field.
 
