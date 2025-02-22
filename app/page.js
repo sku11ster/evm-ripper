@@ -1,20 +1,17 @@
 "use client";
-import { useEffect,useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Head from "next/head";
-import { forceCollide } from "d3-force";
-import { useRouter } from 'next/navigation';
 import dynamic from "next/dynamic";
-
+import { forceCollide } from "d3-force";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false });
 
 export default function EthTracer() {
-  const router = useRouter();
-
   const [address, setAddress] = useState("");
-  const [apiKey,setApiKey] = useState(process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || "");
+  const [apiKey] = useState(process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || "");
   const [maxDepth, setMaxDepth] = useState(3);
   const [useAutoDepth, setUseAutoDepth] = useState(false);
+  const [daysLimit, setDaysLimit] = useState();
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [loading, setLoading] = useState(false);
   const fgRef = useRef(null);
@@ -31,9 +28,13 @@ export default function EthTracer() {
     );
     const data = await response.json();
     if (data.status !== "1") return [];
+    const currentTime = Date.now() / 1000;
+    const cutoff = currentTime - daysLimit * 86400;
     const outgoing = data.result.filter(
       (tx) =>
-        tx.from.toLowerCase() === address.toLowerCase() && tx.isError === "0"
+        tx.from.toLowerCase() === address.toLowerCase() &&
+        tx.isError === "0" &&
+        parseInt(tx.timeStamp) >= cutoff
     );
     const results = [];
     for (const tx of outgoing) {
@@ -112,13 +113,13 @@ export default function EthTracer() {
       return;
     }
     const header =
-      "Address,Short Address,Total Sent (ETH),Total Received (ETH)";
+      "Address,Short Address,Total Sent (ETH),Total Received (ETH),Transaction Hashes";
     const rows = graphData.nodes.map((n) => {
       const hashes = graphData.links
         .filter((l) => l.source === n.id || l.target === n.id)
         .map((l) => l.hash)
         .join(";");
-      return `${n.id},${n.label},${n.sent},${n.received}`;
+      return `${n.id},${n.label},${n.sent},${n.received},"${hashes}"`;
     });
     const csvContent = [header, ...rows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -132,13 +133,6 @@ export default function EthTracer() {
 
   const shortenAddress = (addr) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
 
-  useEffect(() => {
-    // Ensure window is available before using it
-    if (typeof window !== "undefined") {
-      setApiKey(process.env.NEXT_PUBLIC_ETHERSCAN_API_KEY || "");
-    }
-  }, []);
-
   return (
     <div className="min-h-screen bg-gray-950 text-white w-full flex flex-col">
       <Head>
@@ -148,14 +142,21 @@ export default function EthTracer() {
       </Head>
       <main className="container mx-auto px-4 py-6 max-w-4xl flex-grow overflow-auto">
         <h1 className="text-4xl font-extrabold text-center mb-8">Evm Ripper</h1>
-        <div className="bg-gray-900 p-4 md:p-6 rounded-lg shadow-lg">
+        <div className="bg-gray-900 p-4 md:p-6 rounded-3xl shadow-lg">
           <div className="flex flex-col md:flex-row gap-3 md:gap-6">
             <input
               type="text"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Ethereum address (0x...)"
-              className="flex-1 bg-gray-800 text-white p-3 md:p-4 rounded-lg"
+              className="flex-1 bg-gray-800 text-white p-3 md:p-4 rounded-3xl"
+            />
+            <input
+              type="number"
+              value={daysLimit}
+              onChange={(e) => setDaysLimit(Number(e.target.value))}
+              placeholder="Days Limit"
+              className="w-32 bg-gray-800 text-white p-3 md:p-4 rounded-3xl"
             />
             <button
               onClick={handleTrace}
@@ -174,7 +175,7 @@ export default function EthTracer() {
           </div>
         </div>
         <div
-          className="bg-gray-900 p-4 rounded-lg shadow-lg mt-6 w-full overflow-hidden"
+          className="bg-gray-900 p-4 rounded-3xl shadow-lg mt-6 w-full overflow-hidden"
           style={{ height: "clamp(400px, 60vh, 800px)" }}
         >
           {loading ? (
@@ -217,10 +218,10 @@ export default function EthTracer() {
                 navigator.clipboard.writeText(node.id).then(() => {
                   alert(`Copied address: ${node.id}`);
                 });
-                router.push(`https://etherscan.io/address/${node.id}`);
+                window.open(`https://etherscan.io/address/${node.id}`, "_blank");
               }}
               onLinkClick={(link) => {
-                router.push(`https://etherscan.io/tx/${link.hash}`);
+                window.open(`https://etherscan.io/tx/${link.hash}`, "_blank");
               }}
             />
           )}
