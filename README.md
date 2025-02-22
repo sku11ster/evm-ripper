@@ -2,6 +2,8 @@
 
 Evm Ripper is a Next.js application that traces Ethereum transactions for a given address using the Etherscan API and visualizes them as an interactive force-directed graph. The graph displays nodes (Ethereum addresses) and edges (transactions), with each edge showing the transaction time and ETH value.
 
+**Try it out:** [https://evm-ripper.vercel.app/](https://evm-ripper.vercel.app/)
+
 ## Features
 
 * **Ethereum Transaction Tracing:**
