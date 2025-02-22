@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Evm Ripper - Ethereum Transaction Tracer
+Evm Ripper is a Next.js application that traces Ethereum transactions for a given address using the Etherscan API and visualizes them as an interactive force-directed graph. The graph displays nodes (Ethereum addresses) and edges (transactions), with each edge showing the transaction time and ETH value.
 
-## Getting Started
+Features
 
-First, run the development server:
+Ethereum Transaction Tracing:
+Fetch transactions for a specified Ethereum address using the Etherscan API.
 
-```bash
+Interactive Graph Visualization:
+Visualize transaction data with react-force-graph-2d, complete with node and edge interactions.
+Click on a node to copy the address to your clipboard and open its details on Etherscan.
+
+Detailed Edge Labels:
+Each edge displays the transaction's time and ETH value.
+
+CSV Export:
+Easily export the transaction data as a CSV file for further analysis.
+
+Prerequisites
+Node.js (v12 or later)
+npm or yarn
+Installation
+Clone the repository:
+
+bash
+Copy
+Edit
+git clone https://github.com/yourusername/evm-ripper.git
+cd evm-ripper
+Install dependencies:
+
+bash
+Copy
+Edit
+npm install
+# or
+yarn install
+Configuration
+Create a .env.local file in the root directory and add your Etherscan API key:
+
+env
+Copy
+Edit
+NEXT_PUBLIC_ETHERSCAN_API_KEY=your_etherscan_api_key_here
+Running the App
+Start the development server:
+
+bash
+Copy
+Edit
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Open your browser and navigate to http://localhost:3000 to see the application in action.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+How to Use
+Enter an Ethereum Address:
+Type an Ethereum address (starting with 0x) in the provided input field.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+Set Days Limit:
+Specify the number of days to limit the transactions fetched from the blockchain.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Start Tracing:
+Click the Start Tracing button to fetch transactions and build the graph.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Technologies Used
+Next.js: React framework for server-side rendering and static site generation.
+React: JavaScript library for building user interfaces.
+react-force-graph-2d: Library for creating interactive, force-directed graphs.
+D3-force: Used for graph layout calculations.
+Etherscan API: To fetch Ethereum transaction data.
