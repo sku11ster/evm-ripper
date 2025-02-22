@@ -38,11 +38,14 @@ export default function EthTracer() {
     );
     const results = [];
     for (const tx of outgoing) {
+      const ethValue = (parseInt(tx.value) / 1e18).toFixed(4);
+      const timeStr = new Date(parseInt(tx.timeStamp) * 1000).toLocaleString();
       results.push({
         from: tx.from,
         to: tx.to,
-        value: (parseInt(tx.value) / 1e18).toFixed(4),
+        value: ethValue,
         hash: tx.hash,
+        time: timeStr, // Added time property for display
       });
       if (useAutoDepth || depth < maxDepth) {
         await new Promise((resolve) => setTimeout(resolve, 200));
@@ -91,8 +94,24 @@ export default function EthTracer() {
           target: tx.to,
           value: tx.value,
           hash: tx.hash,
+          time: tx.time, // Include time in link data for the edge label
         });
       });
+      
+      // Group links by source-target so that multiple transactions between the same nodes get their own offsets
+      const linkGroups = {};
+      links.forEach(link => {
+        const key = `${link.source}->${link.target}`;
+        if (!linkGroups[key]) linkGroups[key] = [];
+        linkGroups[key].push(link);
+      });
+      Object.values(linkGroups).forEach(group => {
+        group.forEach((link, i) => {
+          link.multilineIndex = i;
+          link.multilineCount = group.length;
+        });
+      });
+      
       setGraphData({ nodes: Array.from(nodes.values()), links });
       setTimeout(() => {
         if (fgRef.current && fgRef.current.zoomToFit) {
@@ -131,8 +150,6 @@ export default function EthTracer() {
     URL.revokeObjectURL(url);
   };
 
-  const shortenAddress = (addr) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
-
   return (
     <div className="min-h-screen bg-gray-950 text-white w-full flex flex-col">
       <Head>
@@ -156,7 +173,7 @@ export default function EthTracer() {
               value={daysLimit}
               onChange={(e) => setDaysLimit(Number(e.target.value))}
               placeholder="Days Limit"
-              className="w-32 bg-gray-800 text-white p-3 md:p-4 rounded-3xl"
+              className="flex-1 bg-gray-800 text-white p-3 md:p-4 rounded-3xl"
             />
             <button
               onClick={handleTrace}
@@ -184,9 +201,7 @@ export default function EthTracer() {
             </div>
           ) : (
             <ForceGraph2D
-              ref={(el) => {
-                fgRef.current = el;
-              }}
+              ref={(el) => { fgRef.current = el; }}
               graphData={graphData}
               nodeLabel={(node) =>
                 `${node.label}\nSent: ${node.sent} ETH\nReceived: ${node.received} ETH`
@@ -203,6 +218,40 @@ export default function EthTracer() {
                 force.force("charge").strength(-150);
                 force.force("collide", forceCollide(10));
               }}
+              // Draw edge labels with a perpendicular offset based on the multiline index
+              linkCanvasObject={(link, ctx, globalScale) => {
+                const text = `${link.time} - ${link.value} ETH`;
+                const start = link.source;
+                const end = link.target;
+                // Compute the midpoint of the link
+                const midX = start.x + (end.x - start.x) / 2;
+                const midY = start.y + (end.y - start.y) / 2;
+                // Compute perpendicular offset vector
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const len = Math.sqrt(dx * dx + dy * dy);
+                const baseOffset = 10; // base offset in pixels
+                let offsetMultiplier = 0;
+                if (link.multilineCount && link.multilineCount > 1) {
+                  offsetMultiplier = link.multilineIndex - (link.multilineCount - 1) / 2;
+                }
+                const offset = baseOffset * offsetMultiplier;
+                let offsetX = 0, offsetY = 0;
+                if (len !== 0) {
+                  offsetX = (-dy / len) * offset;
+                  offsetY = (dx / len) * offset;
+                }
+                const labelX = midX + offsetX;
+                const labelY = midY + offsetY;
+                ctx.save();
+                ctx.fillStyle = "rgba(255,255,255,0.8)";
+                ctx.font = `${Math.max(2, 4 / globalScale)}px Sans-Serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(text, labelX, labelY);
+                ctx.restore();
+              }}
+              linkCanvasObjectMode={() => "after"}
               nodeCanvasObject={(node, ctx, globalScale) => {
                 const size = Math.max(3, 6 / globalScale);
                 ctx.fillStyle = "#3B82F6";
